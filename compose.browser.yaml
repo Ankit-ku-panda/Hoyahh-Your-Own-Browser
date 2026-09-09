@@ -1,0 +1,5 @@
+# Enabled only by start-browser.bat. SOCKS is reachable only on this computer.
+services:
+  tor:
+    ports:
+      - "127.0.0.1:9060:9050"

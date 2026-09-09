@@ -1,0 +1,99 @@
+name: veil-search
+services:
+  app:
+    build: .
+    environment:
+      SEARXNG_URL: http://searxng:8080
+      TOR_STATUS_URL: http://tor:9080/status
+    depends_on:
+    - searxng
+    - tor
+    networks:
+    - search_only
+    dns:
+    - 127.0.0.1
+    dns_opt:
+    - timeout:1
+    - attempts:1
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    tmpfs:
+    - /tmp
+    logging:
+      driver: none
+    restart: 'no'
+    image: veil-search-app
+  searxng:
+    image: docker.io/searxng/searxng:latest
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:?Run the start script to generate your local
+        secret}
+    depends_on:
+    - tor
+    networks:
+    - search_only
+    dns:
+    - 127.0.0.1
+    dns_opt:
+    - timeout:1
+    - attempts:1
+    volumes:
+    - ./searxng:/etc/searxng
+    - ./network_check.py:/opt/veil-network-check.py:ro
+    tmpfs:
+    - /var/cache/searxng
+    logging:
+      driver: none
+    restart: 'no'
+  tor:
+    build: ./tor
+    networks:
+    - search_only
+    - tor_egress
+    volumes:
+    - tor_state:/var/lib/tor
+    read_only: true
+    tmpfs:
+    - /tmp
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      driver: none
+    restart: 'no'
+  gateway:
+    command:
+    - python
+    - gateway.py
+    ports:
+    - 127.0.0.1:8787:8787
+    depends_on:
+    - app
+    networks:
+    - search_only
+    - browser_access
+    dns:
+    - 127.0.0.1
+    dns_opt:
+    - timeout:1
+    - attempts:1
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    logging:
+      driver: none
+    restart: 'no'
+    build: .
+networks:
+  search_only:
+    internal: true
+  tor_egress: {}
+  browser_access: {}
+volumes:
+  tor_state: {}

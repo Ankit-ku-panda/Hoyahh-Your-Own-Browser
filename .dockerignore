@@ -1,0 +1,7 @@
+.env
+.git
+__pycache__
+tests
+
+browser-runtime
+browser/node_modules

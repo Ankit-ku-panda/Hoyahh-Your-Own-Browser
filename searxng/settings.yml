@@ -1,0 +1,43 @@
+use_default_settings: true
+general:
+  debug: false
+  instance_name: Hoyahh Tor
+search:
+  safe_search: 1
+  autocomplete: ''
+  formats:
+  - json
+server:
+  secret_key: replaced-by-SEARXNG_SECRET
+  limiter: false
+  public_instance: false
+  image_proxy: false
+  method: POST
+outgoing:
+  request_timeout: 25.0
+  max_request_timeout: 45.0
+  extra_proxy_timeout: 10
+  using_tor_proxy: true
+  proxies:
+    http:
+    - socks5h://tor:9050
+    https:
+    - socks5h://tor:9050
+engines:
+- name: duckduckgo
+  disabled: false
+  timeout: 25
+- name: google
+  disabled: false
+  timeout: 25
+- name: bing
+  disabled: false
+  timeout: 25
+- name: brave
+  disabled: false
+  timeout: 25
+- name: wikipedia
+  disabled: false
+  timeout: 25
+  display_type:
+  - list

@@ -1,0 +1,15 @@
+ClientOnly 1
+SocksPort 0.0.0.0:9050
+SocksPolicy accept 127.0.0.1/32
+SocksPolicy accept 10.0.0.0/8
+SocksPolicy accept 172.16.0.0/12
+SocksPolicy accept 192.168.0.0/16
+SocksPolicy reject *
+SafeSocks 1
+TestSocks 0
+DataDirectory /var/lib/tor
+AvoidDiskWrites 1
+Log err stderr
+
+ClientRejectInternalAddresses 1
+ClientDNSRejectInternalAddresses 1
