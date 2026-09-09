@@ -293,12 +293,3 @@ Hoyahh source is distributed under the [MIT License](LICENSE). Electron/Chromium
 
 Built with [Electron](https://www.electronjs.org/), [SearXNG](https://docs.searxng.org/), and [Tor](https://www.torproject.org/), with services managed through Docker Compose.
 
-## GitHub description and topics
-
-**Short repository description:**
-
-Hoyahh is a customizable Chromium-based browser with Tor-routed browsing, self-hosted SearXNG metasearch, a text reader, and a Material You-inspired homepage. Built with Electron, Python, and Docker.
-
-**Suggested topics:**
-
-`privacy` · `browser` · `electron` · `chromium` · `tor` · `searxng` · `metasearch` · `self-hosted` · `python` · `docker` · `material-you` · `customizable`
