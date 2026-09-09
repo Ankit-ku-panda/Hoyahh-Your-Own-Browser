@@ -1,221 +1,304 @@
 # Hoyahh
 
-**For the new desktop browser, double-click `start-browser.bat`.** It opens your own Chromium browser with tabs, full clickable websites, and a customizable MYNT-inspired new-tab page. Open Docker Desktop first. The first run downloads and checksum-verifies the official Electron runtime; Node.js and Tor Browser are not required.
+**A personal browser, a search interface you run locally, and a workspace you can make your own.**
 
-Read [browser/README.md](browser/README.md) for upgrade steps, appearance controls, extension loading, and the desktop privacy boundaries. This is an early personal browser, not an audited anonymity browser. Built-in customization includes colors, wallpaper, clock, layout, shortcuts, notes, and CSS. The original MYNT extension is not bundled; a compatible unpacked extension can optionally supply the new-tab page.
+Hoyahh is a customizable Chromium-based desktop browser with Tor-routed browsing, SearXNG metasearch, and a Material You-inspired new-tab page. It also includes a lightweight web interface for searching and reading pages through Tor in an existing browser.
 
-**Two launch modes:** `start-browser.bat` opens full websites in Hoyahh desktop tabs. `start.bat` opens the search app in your existing browser with a Tor-backed text reader. The sections below describe the search/text-reader mode unless they explicitly mention the desktop browser. The desktop browser executes website JavaScript and has different storage and fingerprinting risks.
+The project brings search, clickable results, and page navigation into one local setup. It uses Electron for the desktop window, Python for the search API, and Docker for the search and Tor services.
 
-## Search and text-reader edition
+> **Project status:** Early personal browser build. Hoyahh is designed to reduce IP exposure, but it does not make you untraceable or provide Tor Browser's full anonymity protections. Local automated checks have passed; live Windows, DNS/WebRTC leak, and extension compatibility testing remain incomplete.
 
-Local search and an in-app text reader with Tor-routed requests, mandatory route checks, and no saved queries or page history. This reduces IP exposure to search providers. It cannot make you untraceable.
+[Quick start](#quick-start-on-windows) · [How it works](#how-it-works) · [Use cases](#use-cases) · [Customization](#customization) · [Privacy and limitations](#privacy-and-limitations)
 
-## Windows: upgrade and start
+## Why Hoyahh exists
 
-1. Stop the old version with its `stop.bat` or run `docker compose down` in its folder. Do not use `--volumes`; preserve Tor guard state.
-2. Extract this ZIP into your existing Hoyahh folder and replace matching files. Keep all files together. The ZIP contains no `.env`, so your existing secret is preserved.
-3. Open Docker Desktop, using Linux containers, and wait for it to be ready.
-4. Double-click `start.bat`. It creates a local secret if needed, builds the app and Tor container, and starts four services: `app`, `gateway`, `searxng`, and `tor`. First setup downloads software and can take several minutes. Tor configuration is validated during its image build.
-5. The launcher checks the app and SearXNG for direct TCP internet access and external DNS resolution. If either check fails, it stops Hoyahh. These are smoke checks, not a complete leak audit.
-6. Open `http://127.0.0.1:8787` if the browser does not open automatically. Click **Check Tor connection**. Tor can take a few minutes to connect.
-7. Search only after the check succeeds. Every search performs a fresh check too.
-8. Click a result title to open it inside Hoyahh. Links within the reading view also load through Tor. Use **Back a page** or **Return to results** to navigate. You do not need Tor Browser for this reading view.
-9. Run `stop.bat` when finished. Closing the browser does not stop Docker.
+Searching privately involves more than choosing a search provider. Search requests, clicks on results, website scripts, and browser storage are separate parts of the experience. Routing a search through Tor does not automatically route the website you open afterward.
 
-The launch script rebuilds the gateway when you update source files. You do not need Python installed on Windows because Docker runs it. The start script stops the previous Compose stack before building to avoid leaving an older direct-connect version running during an upgrade.
+Hoyahh connects those steps. Its desktop browser routes website requests through a fixed Tor proxy, while its local search service retrieves results through SearXNG and Tor. The alternative text reader retrieves a page on the backend and returns readable text and links without loading the original website's scripts in your browser.
 
-## Linux or macOS
+The project also gives you control over your starting page. Colors, wallpaper, layout, shortcuts, notes, and custom CSS are editable locally. The source is included for changes beyond the settings screen.
 
-With Docker and Compose installed and running:
+## What you can do
+
+| Feature | What it provides |
+| --- | --- |
+| Desktop browsing | Tabs, an address/search bar, back, forward, reload, and clickable results that open full websites |
+| Search across providers | SearXNG queries configured engines and presents results in one interface |
+| Tor routing | Search and desktop website requests are configured to use Tor, with no automatic direct fallback |
+| Text reading | A simplified view of website text and links, fetched through Tor |
+| Search controls | Web, News, and Science categories, pagination, date filters, and Safe Search where supported |
+| Provider status | Result-source information and readable timeout, CAPTCHA, rate-limit, or access-denied messages |
+| Personal new-tab page | Clock, greeting, shortcuts, notes, wallpaper, colors, and layout settings |
+| Custom CSS | Style the desktop toolbar and built-in homepage |
+| Extension loading | Load trusted unpacked extensions supported by Electron; some can supply a new-tab page |
+| Session controls | Clear visible search results or close desktop tabs and clear website data |
+
+Hoyahh uses [SearXNG](https://docs.searxng.org/) to retrieve results from other search services. It does not crawl the web or maintain an independent search index. The included configuration explicitly enables DuckDuckGo, Google, Bing, Brave, and Wikipedia. Provider availability and filter support vary.
+
+## Use cases
+
+| Use case | Example workflow |
+| --- | --- |
+| Research across sources | Search a programming topic, inspect which providers returned results, and open documentation in separate tabs |
+| A personal browsing workspace | Set your preferred colors, add frequently used websites, and keep local notes beside your search box |
+| Reading with fewer distractions | Use the text-reader mode to read supported articles without remote images, scripts, or forms |
+| Learning browser development | Explore Electron tabs, sandboxed web contents, preload scripts, and communication between the interface and main process |
+| Learning network privacy | Study SOCKS proxies, Tor checks, Docker network isolation, and what happens when a proxy stops |
+| A self-hosting project | Run and inspect your own search API and SearXNG configuration instead of depending on a public search instance |
+
+These are practical research, customization, and learning workflows. This experimental build is not a basis for high-risk anonymity claims.
+
+## Choose your launch mode
+
+| | Desktop browser | Search and text reader |
+| --- | --- | --- |
+| Windows launcher | `start-browser.bat` | `start.bat` |
+| Opens in | Hoyahh's own desktop window | Your existing browser at `http://127.0.0.1:8787` |
+| Clicking a result | Opens a full website in a new Hoyahh tab | Opens extracted text and links inside the search app |
+| Website JavaScript and images | Supported, subject to browser restrictions | Not loaded by the reader |
+| Website forms and sign-in | Ordinary forms can work; some authentication methods are blocked | Unsupported |
+| Custom new-tab dashboard | Included | Not included |
+| Separate Tor Browser installation | Not needed | Not needed |
+
+Using the local web interface does not route other tabs in your existing browser through Tor. Addresses copied and opened outside Hoyahh use that application's connection.
+
+## Quick start on Windows
+
+### Requirements
+
+- Windows x64 or ARM64 for the included desktop launcher.
+- Docker Desktop running with Linux containers enabled.
+- An internet connection for setup downloads and Tor connectivity.
+- Disk space for Docker images and the extracted Electron runtime.
+
+The Windows launchers do not require a separate Node.js, Python, or Tor Browser installation. Node.js is only needed for the optional desktop development workflow.
+
+### First run
+
+1. Download and extract the project. Keep its files together in one folder.
+2. Open Docker Desktop and wait until its engine is running.
+3. Double-click **`start-browser.bat`** for the desktop browser.
+4. Wait for the Docker services, startup checks, and first-time runtime download to finish.
+5. In Hoyahh, click **Check Tor**. Tor may need a few minutes to connect.
+6. Search from the homepage or address bar, then click a result to open its website.
+
+The launcher builds the services, generates a local secret if needed, and checks the search containers for direct TCP and public DNS access. If these startup checks fail, it stops the stack.
+
+The first desktop launch downloads the pinned Electron runtime from its official GitHub release, checks the archive against the release's SHA-256 checksum list, extracts it into `browser-runtime`, and opens the app. Later launches reuse that runtime. Setup downloads use your computer's normal connection.
+
+To use only search and the text reader, run **`start.bat`** instead.
+
+### Stop or update
+
+Close the desktop window and run **`stop.bat`**. Closing the browser alone does not stop Docker.
+
+Before replacing project files, stop the old stack:
+
+```powershell
+docker compose down
+```
+
+Copy the updated project's contents into the existing folder and replace matching files. Keep `.env` and `browser-runtime`; the latter avoids downloading Electron again. Run `start-browser.bat` afterward. Ordinary `docker compose down` preserves the Tor state volume; do not add `--volumes` for routine updates.
+
+You can delete downloaded ZIP archives after extracting them. Keep the extracted project folder.
+
+### Linux and macOS
+
+The included shell launcher starts the search/text-reader interface:
 
 ```sh
 sh start.sh
 ```
 
-Then use `http://127.0.0.1:8787`, check Tor, and click a result title to read it inside Hoyahh. Stop with:
+Open `http://127.0.0.1:8787`, check Tor, and search. Stop the services with `docker compose down`. An equivalent one-click desktop runtime installer is not included for these platforms.
 
-```sh
-docker compose down
+## How it works
+
+### Architecture
+
+```mermaid
+flowchart TD
+    UI["Search interface"] --> Relay["Local TCP relay"]
+    Relay --> API["Python API"]
+    API --> Search["SearXNG"]
+    API --> Reader["Text fetcher and parser"]
+    Search --> Tor["Tor client and network"]
+    Reader --> Tor
+    Desktop["Desktop website tabs"] --> Tor
+    Tor --> Web["Search providers and websites"]
 ```
 
-## How the routing works
+The diagram shows outbound request paths. Responses return through the corresponding services. Tor verification is an additional check before searches, reader requests, and eligible desktop navigations.
 
-The browser sends a POST request through a fixed-destination local TCP relay to the Python app. After a Tor check succeeds, the app asks SearXNG for results. SearXNG uses `socks5h://tor:9050`, including remote destination-name resolution. The Tor client connects to the Tor network; providers see Tor exit connections.
+### 1. Searching
 
-Both the app and SearXNG attach only to an internal Docker network. The Tor container has its own internet-connected network. A separate browser relay (`gateway`) joins the internal network and a normal bridge so Docker Desktop can publish its port. Its only forwarding destination is `app:8787`; it has no user-selectable target or search-provider client. The app and SearXNG specify a local DNS upstream that cannot answer public names; Docker still resolves their internal service names. There is no direct-search fallback setting in the interface.
+The interface sends the query in a POST body to the local API through a fixed-destination TCP relay. The API checks Tor and, if verification succeeds, forwards the search to SearXNG. SearXNG contacts its configured providers using `socks5h://tor:9050`, which also delegates destination-name resolution to the proxy.
 
-In search/text-reader mode, Tor's SOCKS and status ports are not published on your computer. Only the relay's `127.0.0.1:8787` is published. Desktop mode additionally publishes Tor SOCKS at `127.0.0.1:9060` using `compose.browser.yaml`; status remains internal. The app and SearXNG themselves have no published ports. This remains a local app, not an authenticated public service. Do not expose it with port forwarding or a public tunnel.
+The API returns results and sanitized provider-status information. The search interface keeps the query and results in memory, outside its URL and without an app-owned query-history database. Providers still receive the search terms.
 
-The built-in route check fetches the fixed HTTPS endpoint `https://check.torproject.org/api/ip` through Tor using curl's SOCKS hostname option. It requires a successful response with `IsTor: true` and a valid public exit IP. No search terms go to this checker. An unavailable checker blocks searches even if Tor itself might work.
+### 2. Opening full websites
 
-The displayed IP belongs to this probe connection. Search providers and pages loaded in the reader may use different Tor exits. The timestamp is the last successful check, not a guarantee of continuous connectivity or anonymity. The internal-network restriction is intended to block direct egress if Tor fails after the check. Verify this on your Docker installation.
+In desktop mode, a result click requests a new Chromium tab through a narrow, validated application interface. Remote tabs use a separate browser session configured with the fixed SOCKS5 proxy `127.0.0.1:9060`. The browser awaits proxy setup before loading content and has no configured DIRECT fallback.
 
-## What is protected, and what is not
+The local search page uses a different session restricted to the local search service. Remote websites receive no privileged preload script or Node.js access. This separation keeps website code away from the browser's application controls.
 
-| Activity | Protection or limit |
+The browser checks its own Tor route at startup and when requested. New address/result navigations trigger another check when the last successful check is older than 60 seconds. Page-internal navigation continues to use the fixed proxy. A checked badge reports a past check, not continuous verification.
+
+### 3. Reading text-only pages
+
+In web-interface mode, a result click goes to the reader API. After checking Tor, the backend fetches the page through the Tor proxy, validates redirects, and extracts text and safe link targets. The frontend displays those as text nodes and buttons; it never inserts the original remote HTML.
+
+The reader accepts supported public HTTPS pages, upgrades ordinary HTTP links to HTTPS, and rejects private addresses, IP-literal targets, special ports, and onion URLs. Each fetch is bounded to roughly 2 MiB and a 50-second fetch/redirect budget, plus verification time. Output is limited to 120,000 characters and 500 blocks. Scripts, forms, images, videos, PDFs, and sign-in are unsupported in this view.
+
+### Why Docker is used
+
+Docker runs four services with distinct responsibilities:
+
+| Service | Responsibility |
 | --- | --- |
-| Search-provider connections | Configured to use Tor exits instead of your public IP. Providers still receive your search terms. |
-| Search destination DNS | Configured for resolution through the Tor SOCKS proxy. |
-| Tor failure or failed verification | New searches are blocked; no automatic direct fallback. |
-| Result visits inside Hoyahh | HTTPS page requests and destination DNS use the Tor proxy. Only extracted text and link targets return to the interface. |
-| Addresses opened outside Hoyahh | Regular browser visits are not routed by Hoyahh. |
-| Other apps on your computer | Their traffic is not routed through this Tor container. |
-| Local search history | No query database, app cookies, localStorage, or sessionStorage. |
-| Logs | Gateway request logs and Docker log capture are disabled. |
-| Clipboard | Copying a result places its URL in your system clipboard. Clipboard history or cloud sync may retain it. Clear session does not clear the clipboard. |
-| Tor state | A Docker volume retains guard/network state, not query history. It is deliberately kept across restarts. |
-| ISP/network observer | Can generally see that you use Tor. Bridges are not included or configured. |
-| Personal logins and identifying queries | Can identify you even when your IP is hidden. |
-| Browser extensions, malware, device monitoring | Can observe data before Tor protects the network connection. |
-| Container/image installation | Docker/package downloads happen outside Tor and reveal your connection to registries or mirrors. |
+| `app` | Validates requests, checks Tor, and serves the search/reader API |
+| `gateway` | Relays local browser connections only to `app:8787` |
+| `searxng` | Queries search providers and combines their results |
+| `tor` | Runs Tor, exposes an internal verifier, and performs reader fetches |
 
-Tor does not provide perfect anonymity. The reading view does not turn Chrome into Tor Browser or protect other tabs. Device monitoring and browser extensions can still see locally displayed content. A copied URL opened outside Hoyahh uses that application's connection. These broader limitations are described in the Tor Project's best-practices guide below.
+The app and SearXNG attach only to an internal Docker network. The Tor container has a separate network for internet access. The relay joins the internal network and a browser-access network so Docker Desktop can publish its local port.
 
-Hoyahh's Clear session button and Escape shortcut clear the visible query, results, reading view, and in-memory reader navigation trail. They do not securely erase memory, swap, downloads, browser history on destination sites, or third-party records. Cancelling the browser request cannot retract a query already sent.
+Search mode exposes only `127.0.0.1:8787`. Desktop mode adds the loopback SOCKS port `127.0.0.1:9060` through `compose.browser.yaml`. This setup is intended for one computer, not a public hosted service.
 
-## Reading websites inside Hoyahh
+## Customization
 
-Click any result title. The app checks Tor, fetches the page through the Tor service, and displays extracted text and links. Link targets stay in memory and are submitted in POST bodies, not the browser URL. The browser never receives the original remote page HTML or its resource tags.
+Open **Customize** or press **Ctrl+,** in the desktop browser.
 
-This is a text reader, not a full browser. It does not run page JavaScript, load images/fonts/media, replay cookies, submit forms, or support sign-in. Page layout is simplified. Some text or links may be omitted. A site may reject automated readers or Tor traffic. There is no direct fallback.
+- Change your greeting name, colors, local font, text size, and corner radius.
+- Choose a balanced, centered, or wide homepage layout.
+- Set a local wallpaper and show or hide clock and notes widgets.
+- Add shortcuts using one `Name | https://website` entry per line; reorder the lines to reorder shortcuts.
+- Add custom CSS for the toolbar and built-in homepage.
+- Import or export your settings, including notes and wallpaper.
 
-Only public HTTPS hostnames on port 443 are accepted. Ordinary HTTP links are upgraded to HTTPS, and fail if HTTPS is unavailable. Local/private addresses, IP-literal targets, credentials, special ports, and onion-service URLs are not supported in this reader. Redirects are checked individually and capped. Tor is also configured to reject internal-address destinations.
+Custom CSS is temporarily disabled while settings is open, so you can recover if a style hides controls. Remote CSS, fonts, and wallpaper URLs are blocked in the shell; choose a local image instead.
 
-Each request downloads at most 2 MiB, with a total redirect/fetch budget of about 50 seconds plus the route check. Output is limited to 120,000 characters and 500 text blocks. Pages requiring compressed responses may be rejected. Files such as PDFs and videos are not supported. Nothing is fetched automatically from links or page assets; another page is requested only when you click its link.
+Settings are saved locally. The legacy `%APPDATA%\Veil Browser` profile name and some internal `veil-search` identifiers are retained for upgrade compatibility. The displayed product name is Hoyahh.
 
-No cookie jar or browser session is forwarded. In-memory source content is discarded after extraction, and the app does not save page history to disk. The local reader navigation trail and displayed page remain in memory until you return to results or clear the session. Clearing does not securely erase RAM, swap, or records outside Hoyahh.
+There is no paid customization tier. The source is editable, but technical size limits and security restrictions still apply.
 
-The Tor service's fetch command explicitly uses curl's SOCKS hostname proxy and validates TLS certificates. The verifier remains a separate fixed-destination check. Implementation reference: https://curl.se/docs/manpage.html
+### Keyboard shortcuts
 
-## When only one provider returns results
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl+L` | Focus the address bar |
+| `Ctrl+T` | Open a new tab |
+| `Ctrl+W` | Close the current tab |
+| `Ctrl+Tab` / `Ctrl+Shift+Tab` | Switch tabs |
+| `Ctrl+R` | Reload the current website tab |
+| `Alt+Left` / `Alt+Right` | Navigate backward or forward |
+| `Ctrl+,` | Toggle customization settings |
 
-The current configuration explicitly enables DuckDuckGo, Google, Bing, Brave, and Wikipedia, with a 25-second timeout for each. Wikipedia is configured to return ordinary result-list entries because Hoyahh does not render SearXNG information boxes. Other default category engines are preserved.
+## MYNT and extensions
 
-This requests more sources; it does not guarantee that any provider accepts Tor traffic or returns results. No proxy or isolation setting is relaxed.
+The built-in homepage is an original implementation inspired by Material You and [MYNT](https://github.com/prem-k-r/materialYouNewTab). MYNT itself is not bundled, and compatibility has not been verified.
 
-After a search, open **Provider status**. It lists sources represented on the returned page and the safe error categories reported by SearXNG, such as timeout, CAPTCHA, access denied, or rate limiting. Raw exception text is not exposed because it can contain query text or URLs. A missing provider is not automatically classified as blocked: it may return no results or be excluded by the selected category, filters, or query syntax.
+To try a trusted extension, choose **Customize → Load unpacked extension** and select its extracted folder containing `manifest.json`. Review the requested permissions. Compatible extensions declaring a new-tab override appear in the **New-tab page** dropdown. Select one, save, and open a new tab. The Home button still opens Hoyahh's built-in dashboard.
 
-To check broad coverage, choose **Web** and **Any time**, then search for a plain topic such as `Python programming language` without engine-selection prefixes. If only DuckDuckGo returns results, share the Provider status messages rather than your private query.
+Electron supports only a subset of Chrome extension APIs; packed CRX files and Chrome Web Store installation are unsupported. Extension settings or popups open in a tab. Extensions can read page data or transmit it, so Tor routing alone does not make an extension trustworthy. See [Electron's extension documentation](https://www.electronjs.org/docs/latest/api/extensions-api).
 
-Bing is disabled and Wikipedia defaults to infobox output in the upstream settings examined for this revision: https://github.com/searxng/searxng/blob/master/searx/settings.yml
-Google's engine documents CAPTCHA responses: https://docs.searxng.org/dev/engines/online/google.html
+## Privacy and limitations
 
-## Features
+| Area | Implemented behavior and remaining limit |
+| --- | --- |
+| Search and reader routing | Configured to use Tor; failed verification blocks requests. Providers still see queries. |
+| Desktop website routing | Fixed Tor proxy with implicit loopback bypass removed. This is application-level configuration, not a system firewall. |
+| DNS and WebRTC | Destination DNS is intended to use SOCKS; local Chromium resolution is restricted, QUIC is disabled, and non-proxied WebRTC UDP is disabled. Live leak testing remains incomplete. |
+| Website execution | Remote tabs use sandboxing and context isolation with Node integration disabled. Website JavaScript can still fingerprint the browser. |
+| Website permissions | Camera, microphone, geolocation, notifications, screen capture, and device permissions are denied. Some sites will not work fully. |
+| Search history | No app-owned persistent query database. Clearing the search view does not erase records elsewhere. |
+| Website storage | Desktop cache and storage are cleared at startup, through the clear-data control, and at clean exit. Crashes can leave data on disk. Clearing is not secure erasure. |
+| Saved personal data | Notes, appearance, shortcuts, and extension folder choices persist separately. Exported settings can contain personal notes. |
+| Logs | HTTP request logging and Docker log capture are disabled in the supplied configuration. OS, setup-tool, extension, or third-party records may still exist. |
+| Tor state | A Docker volume retains guard/network state across restarts; this is separate from search history. |
+| Other applications | Hoyahh does not route your whole computer, other browsers, or other applications through Tor. |
 
-- Web, News, and Science search through SearXNG.
-- Date and Safe Search filters, subject to provider support.
-- In-memory results and pagination.
-- No external fonts, images, favicons, or autocomplete requests.
-- Clickable result titles open a Tor-routed reading view inside Hoyahh.
-- Links within read pages also open in Hoyahh, with Back and Return to results controls.
-- Several common tracking parameters stripped from result URLs.
-- Tor connection check with last-check time and probe exit IP.
-- No public search instance or direct-provider fallback.
+Tor does not conceal identifying logins or prevent all traffic analysis. Your network provider may observe Tor use. Hoyahh's custom Chromium environment does not offer Tor Browser's fingerprint uniformity and hardening. Read the [Tor Project's privacy guidance](https://support.torproject.org/tor-browser/security/using-tb-safely/) before making anonymity assumptions.
 
-Tor can make searches slower and trigger more provider blocks or CAPTCHAs. Some filters/providers may return few or no results. Hoyahh is a SearXNG metasearch interface, not an independent web index.
+Downloads are currently blocked. Password management, Chrome Sync, DRM playback, and automatic browser updates are not implemented. Some websites block Tor, require unsupported APIs, or fail under the browser restrictions. The desktop browser accepts some onion navigation paths; the text reader does not. Neither mode guarantees access to every site.
 
 ## Troubleshooting
 
-**Docker is not running:** Start Docker Desktop and rerun the launcher. Official Windows installation instructions: https://docs.docker.com/desktop/setup/install/windows-install/
-
-**Isolation check failed:** The launcher stops the stack. Read its message. A direct connection or public DNS response means the intended isolation did not hold; do not remove the checks or add a normal internet network to SearXNG. If an interpreter or startup error prevented testing, that also counts as unverified. Update Docker Desktop, inspect the startup error, and retry. A custom Compose override can defeat the included network configuration.
-
-**Tor could not be verified:** Wait a few minutes and click the check button again. Your network may block Tor, or the Tor check service may be unavailable. The app deliberately blocks searching in either case. To restart the Tor client:
-
-```sh
-docker compose restart tor
-```
-
-**Tor works but search fails:** An upstream engine may block Tor exits or SearXNG may still be starting. Try another category, fewer words, or no date filter. Do not disable the proxy to fix this.
-
-**A search is slow:** Each search includes a Tor check and can take up to about 90 seconds. The UI keeps searches out of the address bar and does not save them.
-
-**Service exited:** Check `docker compose ps -a`. All four services should run. The `gateway` row should show `127.0.0.1:8787->8787/tcp`. Logs are disabled. Run `diagnose.bat` for container status, Tor configuration validation, SearXNG settings validation, and a host connection check. To diagnose startup without submitting searches, temporarily remove the four `logging` blocks and run `docker compose up --build`. Restore them and recreate the stack before private searches. Never share query-bearing logs.
-
-**A page does not open:** The reader accepts public HTTPS HTML and plain-text pages only. Sites requiring JavaScript, login, CAPTCHA, or unsupported file formats can fail. There is no direct-connection fallback. You can return to results and choose another source.
-
-**Copy failed:** The result address is selected so you can copy it manually. Copying is optional; click the title to read within Hoyahh. Opening a copied address in a regular browser tab is outside Hoyahh's Tor routing.
-
-## Verify on your computer
-
-The launcher runs `network_check.py` inside both app and SearXNG. It probes direct connections to two public IP addresses on port 443, checks that public DNS cannot resolve, and confirms the internal Tor service name resolves. Passing only shows those probes were blocked on that run, not that every possible leak has been excluded.
-
-For a non-sensitive outage check:
-
-1. Confirm Tor, then search for an ordinary public topic.
-2. Run `docker compose stop tor`.
-3. Submit a new search. It must say **Search blocked** and show no fresh results.
-4. Run `docker compose start tor`, wait for bootstrap, and check the connection again.
-
-Do not deliberately remove Docker isolation on a machine where you use private queries.
-
-## Files and customization
-
-| File | Purpose |
+| Symptom | What to do |
 | --- | --- |
-| `dist/index.html`, `dist/style.css`, `dist/app.js` | Search, clickable results, reading view, and route status |
-| `server.py` | Gateway, mandatory Tor verification, input checks, privacy headers |
-| `compose.yaml` | Isolated search network, Tor egress, and browser relay network |
-| `gateway.py` | Fixed-destination TCP relay from Windows to the internal app |
-| `diagnose.bat` | Startup/configuration diagnostics without search queries |
-| `network_check.py` | Startup isolation smoke checks |
-| `searxng/settings.yml` | SearXNG Tor proxy and search settings |
-| `tor/Dockerfile`, `tor/torrc`, `tor/service.py` | Tor client, verifier, and internal reader endpoint |
-| `tor/reader.py`, `tor/fetcher.py` | URL validation, Tor page fetching, and text extraction |
-| `start.bat`, `stop.bat`, `start.sh` | Launch/stop scripts |
-| `tests/` | Local mocked gateway/probe tests |
+| Docker is unavailable | Open Docker Desktop with Linux containers enabled, then rerun the launcher. |
+| A PowerShell counter says “bytes written” | The first-time runtime download is progressing. Leave the window open until verification and extraction finish. |
+| The page at port 8787 does not open | Run `docker compose ps -a` and `diagnose.bat` from the project folder. Check that all four services are running. |
+| Tor check fails | Wait for Tor to connect and retry. Your network or the checker may be unavailable; requests remain blocked. |
+| Only one provider returns results | Open **Provider status**, try **Web** and **Any time**, and inspect timeout or CAPTCHA messages. Enabled engines are not guaranteed to respond. |
+| A full website fails | Check Tor and try another site. The site may block Tor or require a feature Hoyahh does not support. |
+| A reader page fails | It may require JavaScript, authentication, compression, or an unsupported content type. Try another result or the desktop mode. |
+| Isolation check fails | Keep the stack stopped and inspect the failure. Do not remove the checks or give SearXNG direct internet access as a workaround. |
+| Old name appears in Docker or a profile path | Legacy internal identifiers are retained for compatibility; this does not mean the visible rename failed. |
 
-Change colors in the variables at the top of `dist/style.css`. Change visible branding in `dist/index.html`. Rebuild after changes. Leave network/proxy settings intact unless you understand and test the impact.
+When reporting a problem, include the launch mode, operating system, service status, and a non-sensitive error message. Remove private queries, URLs, credentials, and personal notes from reports.
 
-The launcher generates `.env` with a random secret. Do not commit it to GitHub. `.gitignore` excludes it. Tor guard state lives in the `tor_state` Docker volume; ordinary `docker compose down` preserves it. Tor guard stability is intentional and should not be reset repeatedly to chase new IP addresses.
+## Project structure
 
-## Update software
+| Path | Purpose |
+| --- | --- |
+| `browser/main.cjs` | Desktop window, tabs, sessions, Tor checks, settings, and extension management |
+| `browser/policy.cjs` | Address validation, request policy, and customization defaults |
+| `browser/preload.cjs`, `browser/search-preload.cjs` | Limited communication between local interfaces and the desktop process |
+| `browser/ui/` | Browser toolbar, new-tab page, and customization interface |
+| `dist/` | Search interface, result display, text reader, and local styles |
+| `server.py` | Python API, request validation, Tor checks, and response handling |
+| `gateway.py` | Fixed-destination local TCP relay |
+| `searxng/settings.yml` | Search engines, filters, and Tor proxy configuration |
+| `tor/` | Tor configuration, supervisor, verifier, page fetcher, and text parser |
+| `compose.yaml`, `compose.browser.yaml` | Container services, network isolation, and optional desktop SOCKS port |
+| `start-browser.bat`, `setup-browser.ps1` | Windows desktop launcher and runtime setup |
+| `start.bat`, `start.sh`, `stop.bat` | Search-mode startup and service shutdown |
+| `network_check.py`, `diagnose.bat` | Startup isolation checks and diagnostics |
+| `tests/`, `browser/tests/` | Python tests and mocked desktop policy/lifecycle tests |
 
-The package uses mutable SearXNG `latest`, Python `3.12-alpine`, and Alpine `3.23` image tags. Tor, curl, and Python in the Tor container come from Alpine's repositories. This is not a fully pinned, reproducible build.
+For more desktop details, see [browser/README.md](browser/README.md).
 
-To refresh software deliberately:
+## Development and verification
 
-```sh
-docker compose down
-docker compose pull searxng
-docker compose build --pull --no-cache
-```
-
-Then rerun `start.bat` or `sh start.sh` so isolation checks run. Review upstream configuration changes. Pin tested image digests for reproducibility if needed.
-
-## Startup corrections in this revision
-
-- Replaced Tor's rejected `SocksPolicy accept private` with explicit loopback/private IPv4 ranges.
-- Changed SearXNG `extra_proxy_timeout` from the invalid float `10.0` to integer `10`.
-- Used explicit `http` and `https` proxy keys for the current SearXNG networking configuration.
-- Moved the Windows port mapping to a separate TCP relay. The app and SearXNG remain isolated from direct internet egress.
-- Changed the Windows health probe to IPv4 with proxy bypass and added useful failure output.
-- Tor's wrapper now reports failure if its Tor child exits unexpectedly, rather than misleadingly exiting with status zero.
-- Added a Tor configuration check at build time and `diagnose.bat` for future startup failures.
-
-The first two corrections match the exact startup errors reported on the user's Docker installation. The relay change addresses the observed missing Windows port mapping. The complete revised stack still needs to be run on that installation.
-
-## Verification completed here
-
-- 35 automated tests passed: 27 Python tests using mock upstream services/subprocess results, plus 8 Node tests covering desktop URL/proxy policy, session separation, sandbox preferences, failed Tor checks, and privileged IPC rejection.
-- Tests cover rejected/failed Tor checks blocking query forwarding, unsafe URLs, request validation, cross-site rejection, response headers, suppressed logs, and absence of a direct retry in the Tor probe, real HTTP forwarding through the browser relay with privacy checks preserved, sanitization of provider errors, Tor-only page retrieval, redirect validation, unsafe-target rejection, and inert text extraction.
-- Python compilation, JavaScript syntax, and static Compose/proxy invariants passed.
-
-Docker is unavailable in the build environment. The previous search-only build was exercised on the user's computer. This desktop/reader revision's container builds/startup, live page fetching through Tor, actual IP/DNS leak behavior, Windows launcher execution, and browser visual behavior have not been verified here. This package has not received an independent security audit. Run the included startup checks and Tor connection check on your computer before relying on it.
-
-To run local mock tests with Python 3.10 or later:
+From the project root, with Python 3.10 or newer installed:
 
 ```sh
 python -m unittest discover -s tests -v
 ```
 
-## Sources and licenses
+With Node.js installed, the desktop policy and mock lifecycle tests run without downloading Electron:
 
-- SearXNG proxy configuration: https://docs.searxng.org/admin/settings/settings_outgoing.html
-- Docker internal networks: https://docs.docker.com/reference/compose-file/networks/
-- Tor Browser best practices: https://support.torproject.org/tor-browser/security/using-tb-safely/
-- Tor guard relays: https://support.torproject.org/tor-browser/security/guard-relay/
-- Tor Browser download: https://www.torproject.org/download/
-- SearXNG: https://github.com/searxng/searxng
+```sh
+node --test browser/tests/lifecycle.test.cjs browser/tests/policy.test.cjs
+```
 
-Hoyahh source files are MIT licensed. SearXNG, Tor, curl, Python, Alpine, and Docker components are downloaded separately and retain their own licenses. Hoyahh's MIT license does not relicense them.
+For Electron development, start the Docker backend with the desktop Compose override, then run `npm ci` and `npm start` from `browser/`. On Windows PowerShell, use `npm.cmd` if script execution policy blocks `npm.ps1`.
+
+The implemented release has passed 27 Python tests and 8 Node tests. They cover request validation, failed Tor checks, reader extraction, redirect handling, relay forwarding, session separation, sandbox settings, and rejected privileged IPC calls. The branding update also passed the 8 Node checks. These are local/mock checks, not proof of live anonymity.
+
+The complete desktop release has not been verified in a Windows GUI or subjected to a live DNS/WebRTC leak audit. To examine behavior on your own computer, use non-sensitive searches, verify Tor, stop the Tor container, and confirm that fresh searches and website visits fail rather than connecting directly. Restart Tor afterward. Passing that check alone is not a complete security audit.
+
+Electron is pinned to `44.3.0` in the desktop package and setup script. Docker images include mutable tags such as SearXNG `latest`; the whole stack is not fully reproducible. Review updates deliberately, keep desktop package/lockfile and setup versions aligned, and repeat relevant verification after changing dependencies.
+
+## Contributing
+
+Bug reports, documentation improvements, accessibility fixes, and reproducible compatibility reports are welcome. Keep changes focused and explain what you tested. For network-related changes, show that a failed Tor connection cannot silently fall back to a direct one.
+
+Do not commit `.env`, downloaded runtimes, dependency folders, personal profile data, or exported settings containing notes. The supplied `.gitignore` excludes the generated secret, runtime directory, Python cache, and browser dependencies.
+
+## License and acknowledgments
+
+Hoyahh source is distributed under the [MIT License](LICENSE). Electron/Chromium, SearXNG, Tor, Python, curl, Alpine, and Docker retain their respective licenses; Hoyahh's license does not relicense them. Material You and MYNT are design references, not bundled products or endorsements.
+
+Built with [Electron](https://www.electronjs.org/), [SearXNG](https://docs.searxng.org/), and [Tor](https://www.torproject.org/), with services managed through Docker Compose.
+
+## GitHub description and topics
+
+**Short repository description:**
+
+Hoyahh is a customizable Chromium-based browser with Tor-routed browsing, self-hosted SearXNG metasearch, a text reader, and a Material You-inspired homepage. Built with Electron, Python, and Docker.
+
+**Suggested topics:**
+
+`privacy` · `browser` · `electron` · `chromium` · `tor` · `searxng` · `metasearch` · `self-hosted` · `python` · `docker` · `material-you` · `customizable`
