@@ -10,6 +10,34 @@ The project brings search, clickable results, and page navigation into one local
 
 [Quick start](#quick-start-on-windows) · [How it works](#how-it-works) · [Use cases](#use-cases) · [Customization](#customization) · [Privacy and limitations](#privacy-and-limitations)
 
+## Interface screenshots
+
+### Desktop browser and personal dashboard
+
+![Hoyahh desktop browser with tabs, clock, search, connection status and notes](docs/images/desktop-dashboard.png)
+
+*The customizable new-tab dashboard with browser controls, a clock, shortcuts and a notes area.*
+
+### Search homepage
+
+![Hoyahh search homepage](docs/images/search-home.png)
+
+*Search categories, date and Safe Search controls, and the Tor connection check.*
+
+### Search results and provider status
+
+![Hoyahh search results with connection details redacted](docs/images/search-results-redacted.png)
+
+*An example Python search with result sources and provider status. The connection-detail line has been redacted for publication using an image-editing tool; this edited copy may differ slightly in rendering from the original.*
+
+### Appearance and custom CSS
+
+![Hoyahh customization settings and CSS editor](docs/images/customization.png)
+
+*Font, text size, corner radius, wallpaper, new-tab selection and custom CSS controls.*
+
+These screenshots show the supplied interface views. A displayed Tor status is a past connection check, not a complete privacy or leak audit.
+
 ## Why Hoyahh exists
 
 Searching privately involves more than choosing a search provider. Search requests, clicks on results, website scripts, and browser storage are separate parts of the experience. Routing a search through Tor does not automatically route the website you open afterward.
